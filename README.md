@@ -4,27 +4,34 @@ https://medium.com/@lucio.corsa/reversing-zyxel-vmg8823-b50b-wpa-algorithm-gener
 
 ## How to
 
-Just get it!
-
-```
-go get github.com/luc10/zykgen/cmd/zykgen
-```
-
 ## Usage
 
 ```
-zykgen (-m|-n|-c) [-l <length>] serial
+keygen [-m|-n|-c] (optional)[-l <length>] (optional)[-f <filepath.txt>] (optional)[-g <# keys to gen>] [serial]
 ```
 
 ### Example
 
-```
-zykgen -c S000Y00000000
+```bash
+keygen -c S000Y00000000 -l 10 -f ciao.txt -g 10
+
+// output at ciao.txt
+
+KNB3YFY77E
+TDA4LN337X
+GGQC44CBK4
+3C73R8YU7R
+TAQQMHU4UP
+UGX8MYQ4Y7
+PYLYP7AX83
+3EDQLE8FY7
+848744FB4T
+84JY8F7K74
 ```
 
 ## Author
 
-**Luciano Corsalini**
+**Luciano Corsalini** & **Narr0wB**
 
 ## License
 
