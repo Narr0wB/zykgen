@@ -7,13 +7,13 @@ https://medium.com/@lucio.corsa/reversing-zyxel-vmg8823-b50b-wpa-algorithm-gener
 ## Usage
 
 ```
-keygen [-m|-n|-c] (optional)[-l <length>] (optional)[-f <filepath.txt>] (optional)[-g <# keys to gen>] [serial]
+usage: [-m|-n|-c] (optional)[-l <length>] (optional)[-f <filepath.txt>] (optional)[-g <# keys to gen>] (optional)[-t <threads, default is max_threads>] [serial]
 ```
 
 ### Example
 
 ```bash
-keygen -c S000Y00000000 -l 10 -f ciao.txt -g 10
+keygen -c -l 10 -f test.txt -g 10 S000Y00000000
 
 // output at ciao.txt
 
