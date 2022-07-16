@@ -1,20 +1,17 @@
 
 #include <stdio.h>
 #include <time.h>
+#include <windows.h>
 #include "keygen.h"
 #include "magic.h"
 
-#define SN_MAX 99999999
-
 int main(int argc, char** argv) {
     if (argc < 3) {
-        printf("usage: [-m|-n|-c] (optional)[-l <length>] (optional)[-f <filepath.txt>] (optional)[-g <# keys to gen>] [serial]\n");
+        printf("usage: [-m|-n|-c] (optional)[-l <length>] (optional)[-f <filepath.txt>] (optional)[-g <# keys to gen>] (optional)[-t <threads, default is max_threads>] [serial]\n");
         exit(0);
     }
 
-    hashfunc func_list[3] = { mojhash, neghash, coshash };
-    int func_idx = 0;
-
+    int func_idx = 2;
 
     switch (argv[1][1])
     {
@@ -36,15 +33,15 @@ int main(int argc, char** argv) {
 
     clock_t timer;
     FILE* pfile = stdout;
+    int threads = 16;
     int key_length = 16;
     int keys_to_gen = 1;
     const char* filepath = NULL;
     char* serial = NULL;
 
-    timer = clock();
     for (int i = 1; i < argc; i++) {
         if (strncmp("-l", argv[i], 2) == 0 && strlen(argv[i]) == 2 && i + 1 < argc) {
-            key_length = strtol(argv[i+1], NULL, 0);
+            key_length = strtol(argv[i+1], NULL, 10);
         }
         else if (strncmp("-f", argv[i], 2) == 0 && strlen(argv[i]) == 2 && i + 1 < argc) {
             filepath = argv[i+1];
@@ -62,8 +59,15 @@ int main(int argc, char** argv) {
             }
         }
         else if(strncmp("-g", argv[i], 2) == 0 && strlen(argv[i]) == 2 && i + 1 < argc) {
-            keys_to_gen = strtol(argv[i+1], NULL, 0);
+            keys_to_gen = strtol(argv[i+1], NULL, 10);
             if (keys_to_gen == 0) keys_to_gen = 1;
+        }
+        else if(strncmp("-t", argv[i], 2) == 0 && strlen(argv[i]) == 2 && i + 1 < argc) {
+            threads = strtol(argv[i+1], NULL, 10);
+            if (threads > 16) {
+                printf("Invalid number of threads, using default settings (MAX_THREADS -> %d)\n", 16);
+                threads = 16;
+            }
         }
         
         if (strncmp("S", argv[i], 1) == 0 && strlen(argv[i]) == 13)
@@ -75,37 +79,66 @@ int main(int argc, char** argv) {
         exit(0);
     }
 
-    
-
     if (!filepath && keys_to_gen > 100) {
         printf("Buffer is too big for stdout, please use a txt file with the \"-f\" option\n");
         exit(0);
     }
 
-    char* buf = calloc(key_length + 1, 1);
-    char* sn_numbers;
-    int i_sn_numbers = 0;
+    char** pbuffers = malloc(threads * sizeof(char*));
 
-    sn_numbers = serial + 5;
-    i_sn_numbers = strtol(sn_numbers, NULL, 0);
-    sn_numbers[1] = '\0';
+    timer = clock();
 
-    for (int i = 0; i < keys_to_gen && i_sn_numbers + i < SN_MAX+1; i++) {
+    int pthread_keys_generated = 0;
+    
+    pbuffers[0] = malloc( ( (keys_to_gen / threads) + (keys_to_gen % threads) ) * (key_length + 1));
 
-        sn_numbers[1] = '\0';
+    thread_t s_thread;
+    thr_keygen_args* args = calloc(1, sizeof(thr_keygen_args));
 
-        sprintf(serial, "%s%07d", serial, i_sn_numbers + i);
+    args->n_start = 0;
+    args->func_idx = func_idx;
+    args->key_length = key_length;
+    args->keys_to_gen = (keys_to_gen / threads) + (keys_to_gen % threads);
+    args->p_buffer = pbuffers[0];
+    args->serial = strdup(serial);
+    pthread_keys_generated = (keys_to_gen / threads) + (keys_to_gen % threads);
 
-        keygen(buf, key_length, serial, strlen(serial), func_list[func_idx]);
-        fprintf(pfile, "\n%s", buf, serial);
+    create_thread(&s_thread, keygen_thread, (void*)args);
+    start_thread(&s_thread);
+    
+
+    for (int i = 1; i < threads; i++) {
+        pbuffers[i] = malloc( (keys_to_gen / threads) * (key_length + 1));
+
+        thread_t thread = {};
+        args = calloc(1, sizeof(thr_keygen_args));
+
+        args->n_start = pthread_keys_generated;
+        args->func_idx = func_idx;
+        args->key_length = key_length;
+        args->keys_to_gen = (keys_to_gen / threads);
+        args->p_buffer = pbuffers[i];
+        args->serial = strdup(serial);
+        pthread_keys_generated += (keys_to_gen / threads);
+
+        create_thread(&thread, keygen_thread, (void*)args);
+        start_thread(&thread);
     }
+
+    join_thread(NULL);
+
     clock_t timer2 = clock();
 
+    //printf("%d %s", threads, pbuffers[1]);
+    fwrite(pbuffers[0], sizeof(char), ( (keys_to_gen / threads) + (keys_to_gen % threads) ) * (key_length + 1), pfile);
+    for (int i = 1; i < threads; i++) {
+        fwrite(pbuffers[i], sizeof(char), (keys_to_gen / threads) * (key_length + 1), pfile);
+    }
+
     if (keys_to_gen > 100) {
-        printf("%d keys generated, time elapsed: %0.3fs", keys_to_gen, (float)(timer2 - timer) / CLOCKS_PER_SEC);
+        printf("%d keys generated, time elapsed: %0.2fs", keys_to_gen, (float)(timer2 - timer) / CLOCKS_PER_SEC);
     }
     
     fclose(pfile);
-    free(buf);
     return 0;
 }

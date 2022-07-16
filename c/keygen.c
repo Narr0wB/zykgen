@@ -1,6 +1,8 @@
 
 #include "keygen.h"
 
+hashfunc func_list[3] = { mojhash, neghash, coshash };
+
 uint8_t transform(int32_t c, int32_t a, int32_t b) {
     if (c + a <= 25 && c + a >= 0) {
         return c + b;
@@ -79,4 +81,37 @@ void keygen(char* buf, int len, char* serial, int slen, hashfunc func) {
     
     free(s_formatted_digest);
     free(s_copy_transformed);
+}
+
+DWORD keygen_thread(void* args) {
+    thr_keygen_args arguments = *(thr_keygen_args*)args;
+
+    char* buf = calloc(arguments.key_length + 1, sizeof(char));
+    char* sn_numbers;
+    int i_sn_numbers = 0;
+
+    sn_numbers = arguments.serial + 5;
+    i_sn_numbers = strtol(sn_numbers, NULL, 10) + arguments.n_start;
+    //printf("%d\n", i_sn_numbers);
+    sn_numbers[1] = '\0';
+
+    for (int i = 0; i < arguments.keys_to_gen && i_sn_numbers + i < SN_MAX+1; i++) {
+        sn_numbers[0] = '\0';
+
+        sprintf(arguments.serial, "%s%07d", arguments.serial, i_sn_numbers + i);
+
+        keygen(buf, arguments.key_length, arguments.serial, strlen(arguments.serial), func_list[arguments.func_idx]);
+        strncpy(&arguments.p_buffer[i * (arguments.key_length + 1)], "\n", 1);
+        strncpy(&arguments.p_buffer[i * (arguments.key_length) + i + 1], buf, arguments.key_length);
+    }
+
+    // for (int g = 0; g < arguments.key_length + 2; g++) {
+    //     printf("%d\n", arguments.p_buffer[g]);
+    // }
+    //printf("%s", arguments.p_buffer);
+
+    free(buf);
+    free(arguments.serial);
+    free(args);
+    return 0;
 }

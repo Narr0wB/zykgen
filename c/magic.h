@@ -6,7 +6,7 @@
 #include <stdio.h>
 
 #define DISCRIMINATOR (int64_t) 1 << 31
-#define TRUE 69420
+#define TRUE 1
 #define FALSE 0
 
 int64_t bibbidi(int64_t a, int64_t b);
