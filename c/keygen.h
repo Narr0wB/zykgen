@@ -36,7 +36,13 @@ void digest(char* str, uint8_t out[16]);
 
 uint8_t transform(int32_t c, int32_t a, int32_t b);
 void keygen(char* buf, int len, char* serial, int slen, hashfunc func);
+
+#ifdef _WIN32
 DWORD keygen_thread(void* args);
+#else 
+void* keygen_thread(void* args);
+#endif
+
 
 uint8_t pick(const char* haystack, const char* chrset, uint8_t needle, int32_t base, int32_t max, int32_t v);
 
