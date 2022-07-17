@@ -14,9 +14,6 @@ int threadcount() {
 }
 
 int create_thread(thread_t* thread, LPTHREAD_START_ROUTINE routine, void* args) {
-    if (n_of_active_threads == threadcount()) {
-        return -2;
-    }
 
     HANDLE hndl = CreateThread(
         NULL,
@@ -124,8 +121,35 @@ int join_thread(thread_t* thread) {
 
 #else
 
-threadid_t threadcount() {
-    return (threadid_t)sysconf(_SC_NPROCESSORS_ONLN);
+static thread_t* threads;
+static int n_threads;
+
+int threadcount() {
+    return (int)sysconf(_SC_NPROCESSORS_ONLN);
 }
+
+int create_thread(thread_t* thread, LPTHREAD_START_ROUTINE routine, void* args) {
+    n_threads++;
+
+    threads = realloc(threads, n_threads * sizeof(thread_t));
+    threads[n_threads-1] = *thread;
+
+    return pthread_create(thread, NULL, thread, args);
+}
+
+int join_thread(thread_t* thread) { 
+    if (thread == NULL) {
+        for (int i = 0; i < n_threads; i++) {
+            if (pthread_join(threads[i], NULL) != 0)
+                return -1;
+        }
+    }
+    else if (pthread_join(*thread, NULL) != 0) {
+        return -1;
+    }
+
+    return 1;
+}
+
 
 #endif // _WIN32

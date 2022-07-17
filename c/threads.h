@@ -1,5 +1,6 @@
 
 #include <stdint.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <stdio.h>
 
@@ -15,20 +16,20 @@ typedef struct {
     HANDLE handle;
 } thread_t;
 
-int create_thread(thread_t* thread, LPTHREAD_START_ROUTINE routine, void* args);
-
 #else
 #include <pthread.h>
 
-typedef void* (LPTHREAD_START_ROUTINE) (void* args);
+typedef pthread_t thread_t;
 
-int create_thread(thread_t* id, LPTHREAD_START_ROUTINE routine, void* args);
+typedef void* (LPTHREAD_START_ROUTINE) (void* args);
 
 #endif // _WIN32
 
+int create_thread(thread_t* thread, LPTHREAD_START_ROUTINE routine, void* args);
+
 int threadcount();
 
-// if threadid is 0 then the function is applied to all created threads
+// if thread is NULL then the function is applied to all active threads
 int pause_thread(thread_t* thread);
 int start_thread(thread_t* thread);
 int join_thread(thread_t* thread);

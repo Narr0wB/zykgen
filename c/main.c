@@ -110,7 +110,7 @@ int main(int argc, char** argv) {
     for (int i = 1; i < threads; i++) {
         pbuffers[i] = malloc( (keys_to_gen / threads) * (key_length + 1));
 
-        thread_t thread = {};
+        thread_t thread;
         args = calloc(1, sizeof(thr_keygen_args));
 
         args->n_start = pthread_keys_generated;
@@ -122,7 +122,9 @@ int main(int argc, char** argv) {
         pthread_keys_generated += (keys_to_gen / threads);
 
         create_thread(&thread, keygen_thread, (void*)args);
-        start_thread(&thread);
+        #ifdef _WIN32
+            start_thread(&thread);
+        #endif // _WIN32
     }
 
     join_thread(NULL);
