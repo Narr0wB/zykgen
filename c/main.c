@@ -70,9 +70,10 @@ int main(int argc, char** argv) {
             }
         }
         
-        if (strncmp("S", argv[argc-1], 1) == 0 && strlen(argv[argc-1]) == 13 && strncmp("-f", argv[argc-2], 2) != 0)
-            serial = argv[argc-1];
     }
+    
+    if (strncmp("S", argv[argc-1], 1) == 0 && strlen(argv[argc-1]) == 13 && strncmp("-f", argv[argc-2], 2) != 0)
+            serial = argv[argc-1];
 
     if (serial == NULL) {
         printf("Invalid serial number, exiting...\n");
