@@ -70,8 +70,8 @@ int main(int argc, char** argv) {
             }
         }
         
-        if (strncmp("S", argv[i], 1) == 0 && strlen(argv[i]) == 13)
-            serial = argv[i];
+        if (strncmp("S", argv[argc-1], 1) == 0 && strlen(argv[argc-1]) == 13 && strncmp("-f", argv[argc-2], 2) != 0)
+            serial = argv[argc-1];
     }
 
     if (serial == NULL) {
