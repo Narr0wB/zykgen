@@ -1,13 +1,13 @@
 # Zyxel VMG8823-B50B WPA Keygen
 
-https://medium.com/@lucio.corsa/reversing-zyxel-vmg8823-b50b-wpa-algorithm-generation-for-fun-e926e45bf8f3
+Default password generator for Zyxel VMG8823-B50B and VMG8825-B50B routers based on serial numbers
 
 ## How to
 
 ## Usage
 
 ```
-usage: [-m|-n|-c] (optional)[-l <length>] (optional)[-f <filepath.txt>] (optional)[-g <# keys to gen>] (optional)[-t <threads, default is max_threads>] [serial]
+usage: [-m|-n|-c] (optional)[-l <length of the password>] (optional)[-f <filepath.txt>] (optional)[-g <# keys to gen>] (optional)[-t <threads, default is max_threads>] [serial]
 ```
 
 ### Example
